@@ -1,12 +1,19 @@
 package golife
 
 import (
+    "bufio"
+    "fmt"
     "log"
     "math"
     "os"
+    "sort"
     "strconv"
     "strings"
     "unicode"
+)
+
+const (
+    max_line_length = 79
 )
 
 type Cell struct {
@@ -14,6 +21,12 @@ type Cell struct {
 }
 
 type Population map[Cell]bool
+
+func check(e error) {
+    if e != nil {
+        panic(e)
+    }
+}
 
 func (pop Population) Add(new_cells []Cell) {
     for i := range new_cells {
@@ -106,7 +119,7 @@ func LoadRLE(filepath string) *Game {
     var g Game
     g.Init()
     g.Filename = filepath
-    g.Comments = make([]string, 10)
+    g.Comments = make([]string, 0, 10)
     bytes, err := os.ReadFile(filepath)
     if err != nil {
         panic(err)
@@ -183,6 +196,7 @@ func LoadRLE(filepath string) *Game {
                         g.Population.Add(cells)
                     case c == "!":
                         done = true
+                        break
                     default:
                         log.Printf("ERROR: Unknown code point %s", c)
                     }
@@ -204,14 +218,14 @@ func LoadRLE(filepath string) *Game {
     return &g
 }
     
-func (game Game) BoundingBox() (Cell, Cell) {
+func (population *Population) BoundingBox() (Cell, Cell) {
     var min_cell, max_cell Cell
     min_cell.X = math.MaxInt64
     min_cell.Y = math.MaxInt64
     max_cell.X = math.MinInt64
     max_cell.Y = math.MinInt64
 
-    for cell, present := range game.Population {
+    for cell, present := range *population {
         if present {
             if cell.X < min_cell.X {
                 min_cell.X = cell.X
@@ -229,4 +243,132 @@ func (game Game) BoundingBox() (Cell, Cell) {
     }
 
     return min_cell, max_cell
+}
+
+type EncodingPair struct {
+    symbol string
+    count int
+}
+
+type CellList []Cell
+
+func (cell_list CellList) Less(i, j int) bool {
+    if cell_list[i].Y == cell_list[j].Y {
+        return cell_list[i].X < cell_list[j].X
+    } else {
+        return cell_list[i].Y < cell_list[j].Y
+    }
+}
+
+func (cell_list CellList) Swap(i, j int) {
+    cell_list[i], cell_list[j] = cell_list[j], cell_list[i]
+}
+
+func (cell_list CellList) Len() int {
+    return len(cell_list)
+}
+
+func (game *Game) ExtractRLE() []EncodingPair {
+    rle := make([]EncodingPair, 0, 100)
+
+    cells := make(CellList, 0, len(game.Population))
+    for c, _ := range game.Population {
+        cells = append(cells, c)
+    }
+
+    min_cell, _ := game.Population.BoundingBox()
+
+    var last_x int64 = -1
+    var last_y int64 = 0
+    sort.Sort(cells)
+    for i := range cells {
+        rel_x := cells[i].X - min_cell.X
+        rel_y := cells[i].Y - min_cell.Y
+
+        switch {
+        case rel_y > last_y:
+            rle = append(rle, EncodingPair{"$", int(rel_y - last_y)})
+            last_y = rel_y
+            if rel_x > 0 {
+                rle = append(rle, EncodingPair{"b", int(rel_x)})
+            }
+            rle = append(rle, EncodingPair{"o", 1})
+        case rel_x == last_x + 1:
+            if len(rle) > 0 {
+                rle[len(rle)-1].count += 1
+            } else {
+                rle = append(rle, EncodingPair{"o", 1})
+            }
+        default:
+            rle = append(rle, EncodingPair{"b", int(rel_x - last_x - 1)}, EncodingPair{"o", 1})
+        }
+        last_x = rel_x
+    }
+    rle = append(rle, EncodingPair{"!", 1})
+
+    return rle
+}
+
+func (game *Game) SaveRLE(filepath string) bool {
+    min_cell, max_cell := game.Population.BoundingBox()
+    if min_cell.X > max_cell.X {
+        return false
+    }
+
+    outfile, err := os.Create(filepath)
+    check(err)
+
+    defer outfile.Close()
+
+    outwriter := bufio.NewWriter(outfile)
+    for i := range game.Comments {
+        comment := game.Comments[i]
+        if ! strings.HasPrefix(comment, "#") {
+            _, err := outwriter.WriteString("#")
+            check(err)
+        }
+        _, err := outwriter.WriteString(comment)
+        check(err)
+        if ! strings.HasSuffix(comment, "\n") {
+            _, err := outwriter.WriteString("\n")
+            check(err)
+        }
+    }
+    if len(game.Filename) > 0 {
+        _, err := outwriter.WriteString(fmt.Sprintf("#C originally loaded from \"%s\"\n", game.Filename))
+        check(err)
+    }
+    if game.Generation > 0 {
+        _, err := outwriter.WriteString(fmt.Sprintf("#C at generation %d\n", game.Generation))
+        check(err)
+    }
+    _, err = outwriter.WriteString(fmt.Sprintf("#C bounded by %d,%d -> %d,%d\n", min_cell.X, min_cell.Y, max_cell.X, max_cell.Y))
+    check(err)
+    _, err = outwriter.WriteString(fmt.Sprintf("  x = %d, y = %d, rule = b3/s23\n", int(max_cell.X - min_cell.X + 1), int(max_cell.Y - min_cell.Y + 1)))
+    check(err)
+
+    var line, newblob strings.Builder
+
+    rle := game.ExtractRLE()
+    for i := range rle {
+        pair := rle[i]
+        if pair.count > 1 {
+            newblob.WriteString(fmt.Sprintf("%d%s", pair.count, pair.symbol))
+        } else {
+            newblob.WriteString(pair.symbol)
+        }
+        if line.Len() + newblob.Len() > max_line_length {
+            line.WriteString("\n")
+            _, err := outwriter.WriteString(line.String())
+            check(err)
+            line.Reset()
+        }
+        line.WriteString(newblob.String())
+        newblob.Reset()
+    }
+    line.WriteString("\n")
+    _, err = outwriter.WriteString(line.String())
+    outwriter.Flush()
+
+    return true
 }
