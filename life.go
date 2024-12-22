@@ -92,9 +92,9 @@ func (game *Game) Next() {
     if game.History_size != 0 {
         if game.History == nil {
             if game.History_size > 0 {
-                game.History = make([]Population, game.History_size)
+                game.History = make([]Population, 0, game.History_size)
             } else {
-                game.History = make([]Population, 10)
+                game.History = make([]Population, 0, 10)
             }
         }
         if game.History_size > 0 && len(game.History) >= game.History_size {
