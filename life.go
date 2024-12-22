@@ -16,8 +16,10 @@ const (
     max_line_length = 79
 )
 
+type Coord int64
+
 type Cell struct {
-    X, Y int64
+    X, Y Coord
 }
 
 type Population map[Cell]bool
@@ -116,6 +118,8 @@ func (game *Game) Next() {
 func Load(filepath string) *Game {
     if strings.HasSuffix(filepath, ".rle") || strings.HasSuffix(filepath, ".rle.txt") {
         return LoadRLE(filepath)
+    } else if strings.HasSuffix(filepath, ".life") || strings.HasSuffix(filepath, ".life.txt") {
+        return LoadLife(filepath)
     } 
     panic("Unsupported filetype")
 }
@@ -143,8 +147,8 @@ func LoadRLE(filepath string) *Game {
         }
     }
 
-    var x, y, max_x int64
-    var expected_x, expected_y int64
+    var x, y, max_x Coord
+    var expected_x, expected_y Coord
     done := false
 
     for line_no := range lines {
@@ -165,8 +169,8 @@ func LoadRLE(filepath string) *Game {
                     if err1 != nil || err2 != nil {
                         log.Printf("ERROR: Unable to parse x and/or y: %s", line)
                     } else {
-                        expected_x = int64(ex_x)
-                        expected_y = int64(ex_y)
+                        expected_x = Coord(ex_x)
+                        expected_y = Coord(ex_y)
                     }
                 }
             } else {
@@ -177,23 +181,23 @@ func LoadRLE(filepath string) *Game {
                     case unicode.IsNumber(rune(c[0])):
                         count_str.WriteString(c)
                     case c == "$":
-                        y += int64(count())
+                        y += Coord(count())
                         if max_x < x {
                             max_x = x
                         }
                         x = 0
                     case c == "b":
-                        x += int64(count())
+                        x += Coord(count())
                     case c == "o":
                         num := count()
                         cells := make([]Cell, num)
                         for j := 0; j < num; j++ {
                             var new_cell Cell
-                            new_cell.X = x + int64(j)
+                            new_cell.X = x + Coord(j)
                             new_cell.Y = y
                             cells[j] = new_cell
                         }
-                        x += int64(num)
+                        x += Coord(num)
                         g.Population.Add(cells)
                     case c == "!":
                         done = true
@@ -283,8 +287,8 @@ func (game *Game) ExtractRLE() []EncodingPair {
 
     min_cell, _ := game.Population.BoundingBox()
 
-    var last_x int64 = -1
-    var last_y int64 = 0
+    var last_x Coord = -1
+    var last_y Coord = 0
     sort.Sort(cells)
     for i := range cells {
         rel_x := cells[i].X - min_cell.X
@@ -376,4 +380,41 @@ func (game *Game) SaveRLE(filepath string) bool {
     outwriter.Flush()
 
     return true
+}
+
+func LoadLife(filepath string) *Game {
+    var game Game
+    game.Init()
+    game.Filename = filepath
+    game.Comments = make([]string, 0, 10)
+
+    f, err := os.ReadFile(filepath)
+    check(err)
+
+    content := string(f)
+    lines := strings.Split(content, "\n")
+
+    cells := make(CellList, 0, 100)
+
+    for j := range lines {
+        line := lines[j]
+        chars := strings.Split(line, "")
+lineloop:
+        for i := range chars {
+            char := chars[i]
+            switch char {
+            case "#":
+                game.Comments = append(game.Comments, line[i+1:])
+                break lineloop
+            case "\n":
+            case " ":
+            default:
+                cells = append(cells, Cell{Coord(i), Coord(j)})
+            }
+        }
+    }
+
+    game.Population.Add(cells)
+
+    return &game
 }
