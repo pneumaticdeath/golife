@@ -65,11 +65,16 @@ func neighbors(cell Cell) []Cell {
     return retval[:]
 }
 
+const neighbor_count_cutoff = 4
+
 func count_neighbors(cell Cell, population Population) int {
     count := 0
     for _, c := range neighbors(cell) {
         if population[c] {
             count += 1
+            if count >= neighbor_count_cutoff { // Optimization-- we don't care if it's over 4
+                return count
+            }
         }
     }
     return count
