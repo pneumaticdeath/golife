@@ -121,9 +121,7 @@ func LoadRLE(filepath string) *Game {
     g.Filename = filepath
     g.Comments = make([]string, 0, 10)
     bytes, err := os.ReadFile(filepath)
-    if err != nil {
-        panic(err)
-    }
+    check(err)
 
     contents := string(bytes)
     lines := strings.Split(contents, "\n")
@@ -134,9 +132,7 @@ func LoadRLE(filepath string) *Game {
             return 1
         } else {
             c, err  := strconv.Atoi(count_str.String())
-            if err != nil {
-                panic(err)
-            }
+            check(err)
             count_str.Reset()
             return c
         }
@@ -206,6 +202,10 @@ func LoadRLE(filepath string) *Game {
         if done {
             break
         }
+    }
+
+    if ! done {
+        log.Println("WARN: Did not get terminator at end of RLE file")
     }
 
     if max_x < x {
