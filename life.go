@@ -38,22 +38,18 @@ func (pop Population) Add(new_cells []Cell) {
 
 func (current Population) Step() Population {
     nextgen := make(Population)
-    look_at := make(Population)
+    neighbor_count := make(map[Cell]int8)
     for cell, present := range current {
         if present {
-            look_at[cell] = true
             for _, n := range neighbors(cell) {
-                look_at[n] = true
+                neighbor_count[n] += 1
             }
         }
     }
 
-    for cell, present := range look_at {
-        if present {
-            c := count_neighbors(cell, current)
-            if current[cell] && c == 2 || c == 3 {
-                nextgen[cell] = true
-            }
+    for cell, count := range neighbor_count {
+        if count == 3 || count == 2 && current[cell] {
+            nextgen[cell] = true
         }
     }
 
@@ -65,21 +61,6 @@ func neighbors(cell Cell) []Cell {
                       {cell.X-1, cell.Y}, {cell.X+1, cell.Y}, 
                       {cell.X-1, cell.Y+1}, {cell.X, cell.Y+1}, {cell.X+1, cell.Y+1}}
     return retval[:]
-}
-
-const neighbor_count_cutoff = 4
-
-func count_neighbors(cell Cell, population Population) int {
-    count := 0
-    for _, c := range neighbors(cell) {
-        if population[c] {
-            count += 1
-            if count >= neighbor_count_cutoff { // Optimization-- we don't care if it's over 4
-                return count
-            }
-        }
-    }
-    return count
 }
 
 type Game struct {
