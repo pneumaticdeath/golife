@@ -67,26 +67,55 @@ type Game struct {
     Filename string
     Population Population
     History []Population
-    History_size int
+    HistorySize int
     Comments []string
     Generation int
 }
 
+func NewGame() *Game {
+    var game Game
+    game.Init()
+    return &game
+}
+
 func (game *Game) Init() {
     game.Population = make(Population)
+    game.Comments = make([]string, 0, 10)
+    game.History = make([]Population, 0, 10)
+}
+
+func (game *Game) SetHistorySize(size int) {
+    if game.History == nil {
+	if size > 0 {
+	    game.History = make([]Population, 0, size)
+	} else if size == 0 {
+	    game.History = nil
+	} else {
+	    game.History = make([]Population, 0, 10)
+	}
+    }
+    game.HistorySize = size
+}
+
+func (game *Game) AddCell(cell Cell) {
+    game.Population[cell] = true
+}
+
+func (game *Game) AddCells(cells []Cell) {
+    game.Population.Add(cells)
 }
 
 func (game *Game) Next() {
-    if game.History_size != 0 {
+    if game.HistorySize != 0 {
         if game.History == nil {
-            if game.History_size > 0 {
-                game.History = make([]Population, 0, game.History_size)
+            if game.HistorySize > 0 {
+                game.History = make([]Population, 0, game.HistorySize)
             } else {
                 game.History = make([]Population, 0, 10)
             }
         }
-        if game.History_size > 0 && len(game.History) >= game.History_size {
-            game.History = game.History[-game.History_size + 1:]
+        if game.HistorySize > 0 && len(game.History) >= game.HistorySize {
+            game.History = game.History[len(game.History)-game.HistorySize + 1:]
         }
         game.History = append(game.History, game.Population)
     } else {
@@ -106,10 +135,8 @@ func Load(filepath string) *Game {
 }
 
 func LoadRLE(filepath string) *Game {
-    var g Game
-    g.Init()
+    g := NewGame()
     g.Filename = filepath
-    g.Comments = make([]string, 0, 10)
     bytes, err := os.ReadFile(filepath)
     check(err)
 
@@ -205,7 +232,8 @@ func LoadRLE(filepath string) *Game {
     if max_x != expected_x || y != expected_y {
         log.Printf("WARN: Expected board of %dx%d got %dx%d", expected_x, expected_y, max_x, y)
     }
-    return &g
+
+    return g
 }
     
 func (population *Population) BoundingBox() (Cell, Cell) {
@@ -364,10 +392,8 @@ func (game *Game) SaveRLE(filepath string) bool {
 }
 
 func LoadLife(filepath string) *Game {
-    var game Game
-    game.Init()
+    game := NewGame()
     game.Filename = filepath
-    game.Comments = make([]string, 0, 10)
 
     f, err := os.ReadFile(filepath)
     check(err)
@@ -397,5 +423,5 @@ lineloop:
 
     game.Population.Add(cells)
 
-    return &game
+    return game
 }
