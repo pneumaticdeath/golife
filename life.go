@@ -126,6 +126,17 @@ func (game *Game) Next() {
     game.Generation += 1
 }
 
+func (game *Game) Previous() error {
+    if game.HistorySize == 0 || len(game.History) == 0 {
+        return io.EOF
+    }
+
+    prevPop := game.History[len(game.History)-1]
+    game.History = game.History[:len(game.History)-1]
+    game.Population = prevPop
+    return nil
+}
+
 func Load(filepath string) (*Game, error) {
     if strings.HasSuffix(filepath, ".rle") || strings.HasSuffix(filepath, ".rle.txt") {
         return LoadRLE(filepath)
