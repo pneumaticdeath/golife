@@ -3,6 +3,7 @@ package golife
 import (
     "bufio"
     "fmt"
+    "io"
     "log"
     "math"
     "os"
@@ -125,7 +126,7 @@ func (game *Game) Next() {
     game.Generation += 1
 }
 
-func Load(filepath string) *Game {
+func Load(filepath string) (*Game, error) {
     if strings.HasSuffix(filepath, ".rle") || strings.HasSuffix(filepath, ".rle.txt") {
         return LoadRLE(filepath)
     } else if strings.HasSuffix(filepath, ".life") || strings.HasSuffix(filepath, ".life.txt") {
@@ -134,11 +135,38 @@ func Load(filepath string) *Game {
     panic("Unsupported filetype")
 }
 
-func LoadRLE(filepath string) *Game {
+func LoadRLE(filepath string) (*Game, error) {
+    fileReader, err := os.Open(filepath)
+    if err != nil {
+        return nil, err
+    }
+    defer fileReader.Close()
+
+    game, err := ReadRLE(fileReader)
+    if game != nil {
+        game.Filename = filepath
+    }
+    return game, err
+} 
+
+func ReadRLE(reader io.Reader) (*Game, error) {
+
     g := NewGame()
-    g.Filename = filepath
-    bytes, err := os.ReadFile(filepath)
-    check(err)
+
+    readBuf := make([]byte, 0, 1024)
+    bytes := make([]byte, 0, 1024)
+    for {
+        n, err := reader.Read(readBuf)
+        if err != nil && err != io.EOF {
+            return nil, err
+        }
+        if n > 0 {
+            bytes = append(bytes, readBuf[:n]...)
+        } 
+        if err == io.EOF {
+            break
+        }
+    }
 
     contents := string(bytes)
     lines := strings.Split(contents, "\n")
@@ -233,9 +261,9 @@ func LoadRLE(filepath string) *Game {
         log.Printf("WARN: Expected board of %dx%d got %dx%d", expected_x, expected_y, max_x, y)
     }
 
-    return g
+    return g, nil
 }
-    
+
 func (population *Population) BoundingBox() (Cell, Cell) {
     var min_cell, max_cell Cell
     min_cell.X = math.MaxInt64
@@ -327,43 +355,62 @@ func (game *Game) ExtractRLE() []EncodingPair {
     return rle
 }
 
-func (game *Game) SaveRLE(filepath string) bool {
+func (game *Game) SaveRLE(filepath string) error {
+    fileWriter, err := os.Create(filepath)
+    if err != nil {
+        return err
+    }
+    defer fileWriter.Close()
+    return game.WriteRLE(fileWriter)
+}
+
+func (game *Game) WriteRLE(outfile io.Writer) error {
+
     min_cell, max_cell := game.Population.BoundingBox()
     if min_cell.X > max_cell.X {
-        return false
+        return nil
     }
-
-    outfile, err := os.Create(filepath)
-    check(err)
-
-    defer outfile.Close()
 
     outwriter := bufio.NewWriter(outfile)
     for i := range game.Comments {
         comment := game.Comments[i]
         if ! strings.HasPrefix(comment, "#") {
             _, err := outwriter.WriteString("#")
-            check(err)
+            if err != nil {
+                return err
+            }
         }
         _, err := outwriter.WriteString(comment)
-        check(err)
+        if err != nil {
+            return err
+        }
         if ! strings.HasSuffix(comment, "\n") {
             _, err := outwriter.WriteString("\n")
-            check(err)
+            if err != nil {
+                return err
+            }
         }
     }
     if len(game.Filename) > 0 {
         _, err := outwriter.WriteString(fmt.Sprintf("#C originally loaded from \"%s\"\n", game.Filename))
-        check(err)
+        if err != nil {
+            return err
+        }
     }
     if game.Generation > 0 {
         _, err := outwriter.WriteString(fmt.Sprintf("#C at generation %d\n", game.Generation))
-        check(err)
+        if err != nil {
+            return err
+        }
     }
-    _, err = outwriter.WriteString(fmt.Sprintf("#C bounded by %d,%d -> %d,%d\n", min_cell.X, min_cell.Y, max_cell.X, max_cell.Y))
-    check(err)
+    _, err := outwriter.WriteString(fmt.Sprintf("#C bounded by %d,%d -> %d,%d\n", min_cell.X, min_cell.Y, max_cell.X, max_cell.Y))
+    if err != nil {
+        return err
+    }
     _, err = outwriter.WriteString(fmt.Sprintf("  x = %d, y = %d, rule = b3/s23\n", int(max_cell.X - min_cell.X + 1), int(max_cell.Y - min_cell.Y + 1)))
-    check(err)
+    if err != nil {
+        return err
+    }
 
     var line, newblob strings.Builder
 
@@ -386,17 +433,23 @@ func (game *Game) SaveRLE(filepath string) bool {
     }
     line.WriteString("\n")
     _, err = outwriter.WriteString(line.String())
+    if err != nil {
+        return err
+    }
+
     outwriter.Flush()
 
-    return true
+    return nil
 }
 
-func LoadLife(filepath string) *Game {
+func LoadLife(filepath string) (*Game, error) {
     game := NewGame()
     game.Filename = filepath
 
     f, err := os.ReadFile(filepath)
-    check(err)
+    if err != nil {
+        return nil, err
+    }
 
     content := string(f)
     lines := strings.Split(content, "\n")
@@ -423,5 +476,5 @@ lineloop:
 
     game.Population.Add(cells)
 
-    return game
+    return game, nil
 }
