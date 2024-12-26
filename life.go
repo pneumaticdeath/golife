@@ -134,6 +134,7 @@ func (game *Game) Previous() error {
     prevPop := game.History[len(game.History)-1]
     game.History = game.History[:len(game.History)-1]
     game.Population = prevPop
+    game.Generation -= 1
     return nil
 }
 
