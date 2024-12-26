@@ -163,7 +163,7 @@ func ReadRLE(reader io.Reader) (*Game, error) {
         if n > 0 {
             bytes = append(bytes, readBuf[:n]...)
         } 
-        if err == io.EOF {
+        if n == 0 || err == io.EOF {
             break
         }
     }
