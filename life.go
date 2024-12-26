@@ -140,9 +140,8 @@ func LoadRLE(filepath string) (*Game, error) {
     if err != nil {
         return nil, err
     }
-    defer fileReader.Close()
-
     game, err := ReadRLE(fileReader)
+    defer fileReader.Close()
     if game != nil {
         game.Filename = filepath
     }
@@ -153,19 +152,19 @@ func ReadRLE(reader io.Reader) (*Game, error) {
 
     g := NewGame()
 
-    readBuf := make([]byte, 0, 1024)
     bytes := make([]byte, 0, 1024)
+    readBuf := make([]byte, 1024)
     for {
         n, err := reader.Read(readBuf)
         if err != nil && err != io.EOF {
             return nil, err
         }
+        if err == io.EOF {
+            break
+        }
         if n > 0 {
             bytes = append(bytes, readBuf[:n]...)
         } 
-        if n == 0 || err == io.EOF {
-            break
-        }
     }
 
     contents := string(bytes)
