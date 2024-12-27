@@ -2,6 +2,7 @@ package golife
 
 import (
     "bufio"
+    "errors"
     "fmt"
     "io"
     "log"
@@ -139,14 +140,34 @@ func (game *Game) Previous() error {
 }
 
 func Load(filepath string) (*Game, error) {
-    if strings.HasSuffix(filepath, ".rle") || strings.HasSuffix(filepath, ".rle.txt") {
-        return LoadRLE(filepath)
-    } else if strings.HasSuffix(filepath, ".life") || strings.HasSuffix(filepath, ".life.txt") {
-        return LoadLife(filepath)
-    } 
-    panic("Unsupported filetype")
+    filereader, err := os.Open(filepath)
+    if err != nil {
+        return nil, err
+    }
+    defer filereader.Close()
+    readerfunc := FindReader(filepath)
+    game, err :=  readerfunc(filereader)
+    if game != nil {
+        game.Filename = filepath
+    }
+    return game, err
 }
 
+func FindReader(filepath string) (func(io.Reader) (*Game, error)) {
+    if strings.HasSuffix(filepath, ".rle") || strings.HasSuffix(filepath, ".rle.txt") {
+        return ReadRLE
+    } else if strings.HasSuffix(filepath, ".life") || strings.HasSuffix(filepath, ".life.txt") {
+        return ReadLife
+    } else {
+        return UnknownFiletypeReader
+    }
+}
+
+func UnknownFiletypeReader(reader io.Reader) (*Game, error) {
+    return nil, errors.New("Unsupported file type")
+}
+
+/* 
 func LoadRLE(filepath string) (*Game, error) {
     fileReader, err := os.Open(filepath)
     if err != nil {
@@ -159,9 +180,9 @@ func LoadRLE(filepath string) (*Game, error) {
     }
     return game, err
 } 
+*/ 
 
 func ReadRLE(reader io.Reader) (*Game, error) {
-
     g := NewGame()
 
     bytes := make([]byte, 0, 1024)
@@ -250,7 +271,7 @@ func ReadRLE(reader io.Reader) (*Game, error) {
                         done = true
                         break
                     default:
-                        log.Printf("ERROR: Unknown code point %s", c)
+                        return nil, errors.New(fmt.Sprintf("Got unknown code point %s", c))
                     }
                 }
             }
@@ -453,18 +474,25 @@ func (game *Game) WriteRLE(outfile io.Writer) error {
     return nil
 }
 
-func LoadLife(filepath string) (*Game, error) {
-    game := NewGame()
-    game.Filename = filepath
-
-    f, err := os.ReadFile(filepath)
-    if err != nil {
-        return nil, err
+func ReadLife(reader io.Reader) (*Game, error) {
+    bytes := make([]byte, 0, 1024)
+    readBuf := make([]byte, 1024)
+    for {
+        n, err := reader.Read(readBuf)
+        if err != nil && err != io.EOF {
+            return nil, err
+        }
+        if err == io.EOF {
+            break
+        }
+        if n > 0 {
+            bytes = append(bytes, readBuf[:n]...)
+        } 
     }
 
-    content := string(f)
+    content := string(bytes)
     lines := strings.Split(content, "\n")
-
+    game := NewGame()
     cells := make(CellList, 0, 100)
 
     for j := range lines {
