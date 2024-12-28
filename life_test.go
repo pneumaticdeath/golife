@@ -29,3 +29,12 @@ func BenchmarkGameStep(b *testing.B) {
         game.Next()
     }
 }
+
+func BenchmarkBigGame(b *testing.B) {
+    game, _ := golife.Load("test_files/turingmachine.rle.txt")
+
+    b.ResetTimer()
+    for range b.N {
+        game.Next()
+    }
+}
