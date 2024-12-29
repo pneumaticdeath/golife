@@ -506,6 +506,7 @@ lineloop:
                 game.Comments = append(game.Comments, line[i+1:])
                 break lineloop
             case "\n":
+            case "\r":
             case " ":
             default:
                 cells = append(cells, Cell{Coord(i), Coord(j)})
