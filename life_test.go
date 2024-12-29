@@ -2,6 +2,7 @@ package golife_test
 
 import (
         "fmt"
+        "strings"
         "testing"
         "github.com/pneumaticdeath/golife"
 )
@@ -65,6 +66,26 @@ func TestPopStep(t *testing.T) {
     }
 }
 
+func TestCellsReader(t *testing.T) {
+    cellsReader := strings.NewReader("! foo\n.O.\nO.O\n.O.\n")
+    game, err := golife.ReadCells(cellsReader)
+    if err != nil {
+        t.Error(err)
+        return
+    }
+
+    if len(game.Comments) != 1 || game.Comments[0] != " foo" {
+        t.Error("Failed to parse comment")
+    }
+
+    expectedCells := golife.CellList{{1, 0}, {0, 1}, {2, 1}, {1, 2}}
+    expectedPop := make(golife.Population)
+    expectedPop.Add(expectedCells)
+
+    if matching, errmsg := cmpPops(expectedPop, game.Population); !matching {
+        t.Error(fmt.Sprintf("Unexpected game population: %s", errmsg))
+    }
+}
 
 func BenchmarkGameStep(b *testing.B) {
     game := golife.NewGame()

@@ -158,6 +158,8 @@ func FindReader(filepath string) (func(io.Reader) (*Game, error)) {
         return ReadRLE
     } else if strings.HasSuffix(filepath, ".life") || strings.HasSuffix(filepath, ".life.txt") {
         return ReadLife
+    } else if strings.HasSuffix(filepath, ".cells") || strings.HasSuffix(filepath, ".cells.txt") {
+        return ReadCells
     } else {
         return UnknownFiletypeReader
     }
@@ -515,6 +517,58 @@ lineloop:
     }
 
     game.Population.Add(cells)
+
+    return game, nil
+}
+
+func ReadCells(reader io.Reader) (*Game, error) {
+    bytes := make([]byte, 0, 1024)
+    readBuf := make([]byte, 1024)
+    for {
+        n, err := reader.Read(readBuf)
+        if err != nil && err != io.EOF {
+            return nil, err
+        }
+        if err == io.EOF {
+            break
+        }
+        if n > 0 {
+            bytes = append(bytes, readBuf[:n]...)
+        }
+    }
+
+    content := string(bytes)
+    lines := strings.Split(content, "\n")
+    game := NewGame()
+    cells := make(CellList, 0, 100)
+
+    for lineNo := range lines {
+        line := lines[lineNo]
+
+        if strings.HasPrefix(line, "!") {
+            game.Comments = append(game.Comments, line[1:])
+            continue
+        }
+
+        chars := strings.Split(line, "")
+        for x := range chars {
+            c := chars[x]
+            switch c {
+            case "!":
+                break
+            case "O":
+                cells = append(cells, Cell{Coord(x), Coord(lineNo)})
+            case ".":
+            case " ":
+            case "\n":
+            case "\r":
+            default:
+                return nil, errors.New(fmt.Sprintf("Unknown character '%s' in Cells file", c))
+            }
+        }
+    }
+
+    game.AddCells(cells)
 
     return game, nil
 }
