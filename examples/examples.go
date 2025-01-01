@@ -55,7 +55,7 @@ var Examples []Example = []Example{
 			"  x = 11, y = 11, rule = b3/s23",
 			"5b3o$4bo2bo$4bo2bo$6obo$o6b3o$o2bo3bo2bo$b3o6bo$3bob6o$3bo2bo$3bo2bo$3b3o!"}},
 	{"Backrake 1", ".rle",
-		[]string{"N Backrake 1",
+		[]string{"#N Backrake 1",
 			"#O Jason Summers",
 			"#C An orthogonal period 8 c/2 backrake.",
 			"#C www.conwaylife.com/wiki/index.php?title=Backrake_1",
