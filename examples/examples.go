@@ -37,7 +37,7 @@ var Examples []Example = []Example{
 			"#C The first elementary knightship to be found in Conway's Game of Life.",
 			"#C https://conwaylife.com/wiki/Sir_Robin",
 			"  x = 31, y = 79, rule = b3/s23",
-			"2o$4bo2bo$4bo3bo$6b3o$2b2o6b4o$2bob2o4b4o$bo4bo6b3o$2b4o4b2o3bo$o9b2o$bo3bo$",
+			"4b2o$4bo2bo$4bo3bo$6b3o$2b2o6b4o$2bob2o4b4o$bo4bo6b3o$2b4o4b2o3bo$o9b2o$bo3bo$",
 			"6b3o2b2o2bo$2b2o7bo4bo$13bob2o$10b2o6bo$11b2ob3obo$10b2o3bo2bo$10bobo2b2o$10bo",
 			"2bobobo$10b3o6bo$11bobobo3bo$14b2obobo$11bo6b3o2$11bo9bo$11bo3bo6bo$12bo5b5o$",
 			"12b3o$16b2o$13b3o2bo$11bob3obo$10bo3bo2bo$11bo4b2ob3o$13b4obo4b2o$13bob4o4b2o$",
