@@ -40,8 +40,8 @@ func ListExamples() []Example {
 			continue
 		}
 		var title string = filepath.Base(path)
-		if len(game.Comments) > 0 && strings.HasPrefix(game.Comments[0], "N") {
-			title = game.Comments[0][1:]
+		if len(game.Comments) > 0 && strings.HasPrefix(game.Comments[0], "N ") {
+			title = game.Comments[0][2:]
 		}
 
 		examples = append(examples, Example{Title: title, path: path})
