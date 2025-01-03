@@ -1,7 +1,9 @@
 package examples
 
 import (
+	"embed"
 	"log"
+	"path/filepath"
 	"strings"
 
 	"github.com/pneumaticdeath/golife"
@@ -9,304 +11,57 @@ import (
 
 type Example struct {
 	Title    string
-	Format   string
-	FileData []string
+	path     string
 }
 
-var Examples []Example = []Example{
-	{"Glider", ".rle",
-		[]string{"  x = 3, y = 3, rule = b3/s23", "bo$2bo$3o!"}},
-	{"Blinker", ".rle",
-		[]string{"  x = 1, y = 3, rule = b3/s23", "o$o$o!"}},
-	{"Gosper Glider Gun", ".rle",
-		[]string{"#N The Gosper glider gun", "#O Bill Gosper",
-			"#C  Discovered by Bill Gosper in November 1970",
-			"#   The first known infinitely growing pattern",
-			"  x = 36, y = 9, rule = b3/s23",
-			"24bo$22bobo$12b2o6b2o12b2o$11bo3bo4b2o12b2o$2o8bo5bo3b2o$2o8bo3bob2o4bobo$10bo",
-			"5bo7bo$11bo3bo$12b2o!"}},
-	{"Conway Tribute", ".rle",
-		[]string{"#N Conway Tribute",
-			"#C A tribute to John Conway on the occasion of his passing",
-			"#C From https://xkcd.com/2293/",
-			"  x = 7, y = 9, rule = b3/s23",
-			"2b3o$2bobo$2bobo$3bo$ob3o$bobobo$3bo2bo$2bobo$2bobo!"}},
-	{"Sir Robin", ".rle",
-		[]string{"#N Sir Robin",
-			"#O Adam P. Goucher, Tom Rokicki; 2018",
-			"#C The first elementary knightship to be found in Conway's Game of Life.",
-			"#C https://conwaylife.com/wiki/Sir_Robin",
-			"  x = 31, y = 79, rule = b3/s23",
-			"4b2o$4bo2bo$4bo3bo$6b3o$2b2o6b4o$2bob2o4b4o$bo4bo6b3o$2b4o4b2o3bo$o9b2o$bo3bo$",
-			"6b3o2b2o2bo$2b2o7bo4bo$13bob2o$10b2o6bo$11b2ob3obo$10b2o3bo2bo$10bobo2b2o$10bo",
-			"2bobobo$10b3o6bo$11bobobo3bo$14b2obobo$11bo6b3o2$11bo9bo$11bo3bo6bo$12bo5b5o$",
-			"12b3o$16b2o$13b3o2bo$11bob3obo$10bo3bo2bo$11bo4b2ob3o$13b4obo4b2o$13bob4o4b2o$",
-			"19bo$20bo2b2o$20b2o$21b5o$25b2o$19b3o6bo$20bobo3bobo$19bo3bo3bo$19bo3b2o$18bo6b",
-			"ob3o$19b2o3bo3b2o$20b4o2bo2bo$22b2o3bo$21bo$21b2obo$20bo$19b5o$19bo4bo$18b3ob3o",
-			"$18bob5o$18bo$20bo$16bo4b4o$20b4ob2o$17b3o4bo$24bobo$28bo$24bo2b2o$25b3o$22b2o$",
-			"21b3o5bo$24b2o2bobo$21bo2b3obobo$22b2obo2bo$24bobo2b2o$26b2o$22b3o4bo$22b3o4bo$",
-			"23b2o3b3o$24b2ob2o$25b2o$25bo2$24b2o$26bo!"}},
-	{"Whirlpool", ".rle",
-		[]string{"#N Whirlpool",
-			"#O Mitch Patenaude mitch@mitchpatenaude.net",
-			"#C A long-lived animation of a swirling pattern",
-			"#C with a false stagnation.",
-			"#C November 30, 2024",
-			"  x = 11, y = 11, rule = b3/s23",
-			"5b3o$4bo2bo$4bo2bo$6obo$o6b3o$o2bo3bo2bo$b3o6bo$3bob6o$3bo2bo$3bo2bo$3b3o!"}},
-	{"Backrake 1", ".rle",
-		[]string{"#N Backrake 1",
-			"#O Jason Summers",
-			"#C An orthogonal period 8 c/2 backrake.",
-			"#C www.conwaylife.com/wiki/index.php?title=Backrake_1",
-			"x = 27, y = 18, rule = B3/S23",
-			"5b3o11b3o5b$4bo3bo9bo3bo4b$3b2o4bo7bo4b2o3b$2bobob2ob2o5b2ob2obobo2b$b",
-			"2obo4bob2ob2obo4bob2ob$o4bo3bo2bobo2bo3bo4bo$12bobo12b$2o7b2obobob2o7b",
-			"2o$12bobo12b$6b3o9b3o6b$6bo3bo9bo6b$6bobo4b3o11b$12bo2bo4b2o5b$15bo11b",
-			"$11bo3bo11b$11bo3bo11b$15bo11b$12bobo!"}},
-	{"Blinker Puffer 1", ".rle",
-		[]string{"#N Blinker puffer 1",
-			"#O Robert Wainwright",
-			"#C An orthogonal period 8 c/2 blinker puffer. The first blinker puffer to be found.",
-			"#C www.conwaylife.com/wiki/index.php?title=Blinker_puffer_1",
-			"x = 9, y = 18, rule = B3/S23",
-			"3bo5b$bo3bo3b$o8b$o4bo3b$5o4b4$b2o6b$2ob3o3b$b4o4b$2b2o5b2$5b2o2b$3bo",
-			"4bo$2bo6b$2bo5bo$2b6o!"}},
-	{"Blinker Ship 1", ".rle",
-		[]string{"#N Blinker ship 1",
-			"#O Paul Schick",
-			"#C A blinker ship created by Paul Schick based on his Schick engine.",
-			"#C www.conwaylife.com/wiki/index.php?title=Blinker_ship_1",
-			"x = 27, y = 15, rule = B3/S23",
-			"10b4o13b$10bo3bo12b$10bo16b$b2o8bo2bo12b$2ob2o22b$b4o3bo18b$2b2o3bob2o",
-			"8bo4b3o$6bo3bo8bo4bobo$2b2o3bob2o8bo4b3o$b4o3bo18b$2ob2o22b$b2o8bo2bo",
-			"12b$10bo16b$10bo3bo12b$10b4o!"}},
-	{"Block Laying Switch Engine", ".rle",
-		[]string{"#N Block-laying switch engine",
-			"#O Charles Corderman",
-			"#C A diagonal period 288 c/12 block-laying puffer.",
-			"#C www.conwaylife.com/wiki/index.php?title=Block-laying_switch_engine",
-			"x = 29, y = 28, rule = 23/3",
-			"18bo10b$b3o8bo5bo10b$o3bo6bo7bo9b$b2o9b4o2b2o9b$3b2ob2o9b3o9b$5b2o11bo",
-			"bo8b$19bo7b2o$19bo7b2o11$7b2o20b$7b2o20b7$15b2o12b$15b2o!"}},
-	{"Frothing Puffer", ".rle",
-		[]string{"#N Frothing puffer",
-			"#O Paul Tooke, April 2001",
-			"#C A c/2 puffer with a seemingly unstable back end that nevertheless",
-			"#C survives.",
-			"#C https://www.conwaylife.com/wiki/Frothing_puffer",
-			"x = 33, y = 23, rule = B3/S23",
-			"7bo17bo$6b3o15b3o$5b2o4b3o5b3o4b2o$3b2obo2b3o2bo3bo2b3o2bob2o$4bobo2bo",
-			"bo3bobo3bobo2bobo$b2obobobobo4bobo4bobobobob2o$b2o3bobo4bo5bo4bobo3b2o",
-			"$b3obo3bo4bobobo4bo3bob3o$2o9b2obobobob2o9b2o$12bo7bo$9b2obo7bob2o$10b",
-			"o11bo$7b2obo11bob2o$7b2o15b2o$7bobobob3ob3obobobo$6b2o3bo3bobo3bo3b2o$",
-			"6bo2bo3bobobobo3bo2bo$9b2o4bobo4b2o$5b2o4bo3bobo3bo4b2o$9bob2obo3bob2o",
-			"bo$10bobobobobobobo$12bo2bobo2bo$11bobo5bobo!"}},
-	{"Lobster", ".rle",
-		[]string{"#N lobster.rle",
-			"#O Matthias Merzenich, 2011",
-			"#C https://conwaylife.com/wiki/Lobster_(spaceship)",
-			"#C https://www.conwaylife.com/patterns/lobster.rle",
-			"x = 26, y = 26, rule = B3/S23",
-			"12b3o$12bo$13bo2b2o$16b2o$12b2o$13b2o$12bo2bo2$14bo2bo$14bo3bo$15b3obo",
-			"$20bo$2o2bobo13bo$obob2o13bo$o4bo2b2o13b2o$6bo3bo6b2o2b2o2bo$2b2o6bo6b",
-			"o2bo$2b2o4bobo4b2o$9bo5bo3bo3bo$10bo2bo4b2o$11b2o3bo5bobo$15bo8b2o$15b",
-			"o4bo$14bo3bo$14bo5b2o$15bo5bo!"}},
-	{"Primer", ".rle",
-		[]string{
-			"#N Primer",
-			"#O Dean Hickerson",
-			"#C A prime number sieve created in November 1991.",
-			"#C www.conwaylife.com/wiki/index.php?title=Primer",
-			"x = 440, y = 294, rule = B3/S23",
-			"412b2o$410b2ob2o13b2o$410b4o13b4o$411b2o14b2ob2o$93b3o11b3o319b2o$93bo",
-			"2bo10bo2bo$93bo6b3o4bo16b3o11b3o$93bo5bo2bo4bo15bo2bo10bo2bo$94bo4b2ob",
-			"o5bo17bo4b3o6bo285b2o$126bo4bo2bo5bo284bo2bo$125bo5bob2o4bo285bo2b2o$",
-			"424bo2b2o$99bo8bo315b4o$99bobo5b3o278bo7bo$107bob2o14bo8bo254bo7b2o$",
-			"100bo2bo4b3o13b3o5bobo249bo4bo6b2o30b2o$101b3o4b2o13b2obo258b5o29b4o4b",
-			"4o$102bo20b3o4bo2bo280bo3bo3bo4b2ob2o$124b2o4b3o282bo6bo6b2o$131bo279b",
-			"o3bo5bo$412b4o$91b3o313b3o$90bo2bo311b2ob2o26b2o$93bo46b3o264b3o17b4o",
-			"4b4o$93bo46bo2bo268b4o10bo3bo4b2ob2o$92bo47bo270bo3bo14bo6b2o$106b3o3b",
-			"3o25bo274bo13bo$105bo2bo3bo2bo25bo272bo18bo$108bo3bo6b3o3b3o253bo49bo$",
-			"96b3o9bo3bo5bo2bo3bo2bo253b2o47bo2b2o$98bo8bo5bo7bo3bo255b2o47bo5bo$",
-			"97bo12bo10bo3bo9b3o293bobo2b2o$110bo9bo5bo8bo295bo3b2o$109bobo11bo12bo",
-			"296b3o$101b3o19bo$76bo13bo12bo18bobo$75b3o11b3o10bo27b3o303b2o$75bob2o",
-			"4bo5bob2o37bo12bo13bo277b4o$76b3o3b3o5b3o38bo10b3o11b3o245bo13b2o15b2o",
-			"b2o$76b2o3b2o2bo4b2o49b2obo5bo4b2obo244bo13b4o16b2o$81bo3bo24b3o28b3o",
-			"5b3o3b3o245b3o11b2ob2o$81bob2o57b2o4bo2b2o3b2o261b2o$81b2o38b3o24bo3bo",
-			"$149b2obo213bo$75b3o73b2o214b2o42b2o$74bo2bo288b2o41b2ob2o$77bo78b3o",
-			"250b4o$77bo78bo2bo246bo3b2o$76bo79bo248b2o$156bo249bo3b2o$102b3o52bo",
-			"251b4o$102bo2bo303b2ob2o$102bo26b3o279b2o$92bo9bo25bo2bo227bo$91b3o8bo",
-			"28bo226bo$55b3o11b3o19bob2o8bo27bo9bo216b3o36b4o$54bo2bo10bo2bo20b3o",
-			"36bo8b3o253bo3bo$57bo4b3o6bo20b2o36bo8b2obo239b2o16bo$57bo4bo2bo5bo67b",
-			"3o209bo21b4o4b4o14bo$56bo4bo8bo69b2o21bo13bo9b2o163b2o18bo3bo4b2ob2o$",
-			"97bo5bo58b3o11b3o7b4o161b2o23bo6b2o$96b3o3b3o57bob2o4bo5bob2o6b2ob2o",
-			"184bo$62b2o31b2obo3bob2o4b2o18bo5bo26b3o3b3o5b3o8b2o189bo$62bo7bo24b3o",
-			"5b3o4bobo16b3o3b3o25b2o3b2o2bo4b2o198bo$69b3o24b2o5b2o6b2o9b2o4b2obo3b",
-			"ob2o29bo3bo28bo175bo2b2o$68b2obo49bobo4b3o5b3o29bob2o30bo173bo5bo$68b",
-			"3o29bo20b2o6b2o5b2o30b2o28bo3bo174bobo2b2o$69b2o28b3o97b4o174bo3b2o$",
-			"98bo3bo30bo28b3o26bo2b3o117bo64b3o$132b3o26bo2bo25b2o2bobo116bo$72bo5b",
-			"o52bo3bo28bo26bo2b3o116b3o$71b3o3b3o18b2ob2o61bo34b4o179b2o$53b3o15bob",
-			"2ob2obo20bo62bo34bo3bo178b4o25b2o$53bo2bo15b3ob3o52b2ob2o66bo133bo27b",
-			"2o15b2ob2o15b4o4b4o$53bo18b2o3b2o33bo20bo67bo135b2o24b4o16b2o15bo3bo4b",
-			"2ob2o$53bo57b2o41b3o3b3o16bo29bo126b2o25b2ob2o36bo6b2o$54bo20bo35bobo",
-			"7bo31bo2bo3bo2bo14b3o29bo154b2o36bo$74bobo10bo33b2o33bo3bo17b3o25bo3bo",
-			"16bo$73bo3bo9b2o31bobo33bo3bo19bo26b4o17bo$58b2o14bobo9bobo57bo8bo5bo",
-			"16bobo43bo3bo128b2o49b2o$57bobo14b3o68b2o11bo19bo46b4o126b2ob2o48bobo$",
-			"59bo85bobo10bo192bo3b4o49bob2o$157bobo16bo172b2obo3b2o51b2o$82b3o90b2o",
-			"92bo79bo3bo55bo$82bo2bo89bobo90bo80b2obo3b2o$82bo66b3o72b3o41b3o80bo3b",
-			"4o$82bo65bo2bo74bo128b2ob2o50b2o$83bo67bo72bobo130b2o50b4o$151bo60bo",
-			"11b2o166b2o15b2ob2o$150bo59bo2bo177b4o16b2o$210bo2bo129b4o44b2ob2o$",
-			"211bo5b2o8bo114bo3bo46b2o$216b4o8bo117bo$216b2ob2o3bo3bo116bo$73b2o",
-			"143b2o5b4o156b2o$72bobo308b2ob2o$67b3o4bo304bo3b4o$67bo2bo90bo215b2obo",
-			"3b2o$67bo92b2o215bo3bo$67bo92bobo10bo13bo189b2obo3b2o$67bo104b3o11b3o",
-			"52bo29bo29bo29bo47bo3b4o$68bo103bob2o4bo5bob2o51b3o27b3o27b3o27b3o49b",
-			"2ob2o$173b3o3b3o5b3o54bo29bo29bo29bo50b2o11b2o$173b2o3b2o2bo4b2o54b2o",
-			"28b2o28b2o28b2o19bo39b4ob2o$178b2ob2o172bo38b6o$178bo2b3o165bo5bo15b4o",
-			"20b4o$179bob2o167b6o14bo3bo29b2o$181bo192bo28b4o$172b3o2bo3bo191bo29b",
-			"2ob2o$171bo2bo3bobo224b2o$174bo4bo221bo$174bo71b2o28b2o28b2o28b2o28b2o",
-			"31bobo$173bo72bobo27bobo27bobo27bobo27bobo32bo$164b3o80b2o28b2o28b2o",
-			"28b2o28b2o36b2o$163bo2bo236b2ob2o$166bo3b3o230b4o$166bo3bo2bo15bo214b",
-			"2o$166bo3bo17b3o194b2o8b4o$166bo3bo16b2obo192b2ob2o6b6o$165bo5bo15b3o",
-			"135b2o52bo3b4o7b4ob2o$188b2o134b4o46b2o2bobo3b2o12b2o$167b3o154b2ob2o",
-			"44bo2b2o3bo$167bobo76b2o28b2o28b2o18b2o46b2o2bobo3b2o$167b3o76bobo27bo",
-			"bo27bobo10bobo57bo3b4o$247b2o28b2o22b2o4b2o9bo2b2o24b2o34b2ob2o$301bo",
-			"17bobo16b4o4b4o35b2o5b2o5b4o$145b3o11b3o5b3o156b2o9bo3bo4b2ob2o9bo29b",
-			"2ob2o3bo3bo$145bo2bo10bo2bo5bo155b2ob2o12bo6b2o11bo28b4o8bo$145bo6b3o",
-			"4bo164b4o12bo15bo4bo29b2o8bo$145bo5bo2bo4bo140b3o14bo7b2o30b5o$146bo4b",
-			"2obo5bo129b4o5b5o13b2o16bo$289bo3bo5b3ob2o11bobo12bo3bo62b2o$293bo8b2o",
-			"26bo3bo9bo52bo2bo$285bo6bo38bo12b6o42b2o3bo2bo$152b2o6bo88bo29bo7b3o",
-			"32bo9b2o9bob3o44bo3b2ob2o$152bo6b3o86b2o28b2o5bo6bo29b2o13b2o9bo48b2o$",
-			"159bob2o130bo27bobo13bo37b3o$160b3o126bo3bo83bo$107b2o6b2o43b2o128b4o",
-			"53b2o27bo$106b4o4b4o228b4o49b4o$106b2ob2o3b2ob2o227b2ob2o33bo13bo3bo$",
-			"108b2o6b2o7b2o47b3o120b4o30b2o15b2o35bo16bo$123b2ob2o46bo2bo118bo3bo",
-			"28b2ob2o47bo3bo15bo$123b4o16b3o28bo125bo14b4o10b4o49b4o$124b2o16bo2bo",
-			"28bo9b2o8bo104bo14bo3bo11b2o$145bo28bo8b4o8bo51bo70bo$145bo29bo7b2ob2o",
-			"3bo3bo52bo68bo$120b4o20bo40b2o5b4o48bo3bo$116b2o2bo2b2o120b4o$117bo3bo",
-			"2b2o114b3o25b2o39b2o3b2o$121bo2bo113b2ob2o24b4o36bo6bobo$122b2o67bo31b",
-			"2o15b3o24b2ob2o34bo2bo6bo$146b2o44b2o30b2o19b4o20b2o34b2o7b3o$81b5o58b",
-			"2ob2o44bo29bo20bo3bo5bo51b2o$80bo4bo31bo26b4o13b3o29bo54bo6bo6b2o$85bo",
-			"32bo6b2o18b2o7bo6bo2bo27bo54bo3bo3bo4b2ob2o$84bo29bo3bo4b2ob2o24bobo6b",
-			"o56b5o29b4o4b4o$108b4o3b4o4b4o26b2o6bo55bo4bo38b2o45b2o5b4o$107bo3bo",
-			"12b2o36bo31bo27bo83b2ob2o3bo3bo$111bo83bo25bo33bo50b4o8bo$103b2o2bo2bo",
-			"65bo14bo3bo11b2o45bo3b3o46b2o8bo$103b3o71bo14b4o10b4o43bo3bob3o$103b2o",
-			"2bo2bo62bo3bo28b2ob2o43bo6b2o$111bo62b4o30b2o15b2o28b5obo$107bo3bo111b",
-			"2ob2o29b4o$108b4o89bobo19b4o31bo$167b4o31b2o20b2o12b2o$166bo3bo31bo36b",
-			"2o$170bo67bo23b2o$162b2o2bo2bo51b3o20b2o14b2ob2o$162b3o31bobo20bo3b2o",
-			"18b4o13b4o$162b2o2bo2bo27b2o20bobo2b2o17b2ob2o13b2o$170bo8b2o16bo20bo",
-			"5bo20b2o$166bo3bo5b3ob2o37bo2b2o$167b4o5b5o38bo$177b3o22b2o17bo$201b4o",
-			"12bo$201b2ob2o12bo6b2o$194bo2bo5b2o9bo3bo4b2ob2o$185b2o2bo4bo3bo16b4o",
-			"4b4o$170b2o12bo2bo2bo2bo4b2o24b2o$169bobo13b2o2b3o2bo3bo$156b2o11b2o",
-			"14b3o2bo3bo2bo5b2o$155bobo31bo11b2ob2o$157bo43b4o$202b2o3$200b2o$155bo",
-			"43b4o$153bobo31bo11b2ob2o$154b2o11b2o14b3o2bo3bo2bo5b2o$167bobo13b2o2b",
-			"3o2bo3bo$168b2o12bo2bo2bo2bo4b2o24b2o$183b2o2bo4bo3bo16b4o4b4o$192bo2b",
-			"o5b2o9bo3bo4b2ob2o$199b2ob2o12bo6b2o$199b4o12bo$103bo71b3o22b2o17bo$",
-			"103b2o60b4o5b5o38bo$102bobo59bo3bo5b3ob2o37bo2b2o$168bo8b2o16bo20bo5bo",
-			"$160b2o2bo2bo27b2o20bobo2b2o$160b3o31bobo20bo3b2o$160b2o2bo2bo51b3o$",
-			"168bo$164bo3bo31bo$165b4o31b2o20b2o$105b2o92bobo19b4o$b6o31b2o63b2ob2o",
-			"113b2ob2o$o5bo28b3ob2o58bo3b4o65b4o30b2o15b2o$6bo28b5o54b2o2bobo3b2o",
-			"65bo3bo28b2ob2o$5bo30b3o54bo2b2o3bo73bo14b4o10b4o$94b2o2bobo3b2o68bo",
-			"14bo3bo11b2o$99bo3b4o86bo$103b2ob2o84bo$105b2o5b2o5b4o28b2o$80bo29b2ob",
-			"2o3bo3bo27bobo$81bo28b4o8bo20b2o7bo37bo$76bo4bo29b2o8bo20b4o45bo83bo$",
-			"77b5o60b2ob2o44bo84bo$144b2o44b2o79bo4bo20b2o8bo$119bo69bo82b5o19b4o8b",
-			"o$120bo175b2ob2o3bo3bo$115bo4bo177b2o5b4o$114b2o3b2o$118bo64b2o5b4o$",
-			"181b2ob2o3bo3bo90bobo14bobo$181b4o8bo90b2o5b2o6b2o3bo$182b2o8bo92bo5bo",
-			"bo5b3obob2o$119b4o170b2o4b3o4bo$104bo13bo3bo169bo9bo3bo$105bo16bo180b",
-			"3o$101bo3bo15bo181bo$102b4o$307bo$297b2o9bo$294b3ob2o4bo3bo$294b5o6b4o",
-			"$271b2o22b3o$269b2ob2o$269b4o16b2o$270b2o15b2ob2o$287b4o$135b2o151b2o$",
-			"134b4o$127bobo4b2ob2o$136b2o15b2o132bo$128bo22b2ob2o94b3o34b2o$128bo",
-			"22b4o94b5o32bob2o$128bo23b2o95b3ob2o31bobo$252b2o32b2o2$128bo22bo$128b",
-			"o22b2o128bo$128bo21bob2o113b2o13bo6b2o$150bobo113bobo9bo3bo4b2ob2o3b2o",
-			"8bo$127bobo20b2o116bo10b4o4b4o3b4o8bo$288b2o4b2ob2o3bo3bo$296b2o5b4o$",
-			"145bo126b2o$146bo6b2o116bobo$142bo3bo4b2ob2o117bo$125b2o16b4o4b4o146b",
-			"2o$123b2ob2o24b2o146b2ob2o$123b4o36b2o112b2o22bo2bo$124b2o36b4o110bobo",
-			"22bo2bo$162b2ob2o111bo23b2o$164b2o$157bobo$156bo2b2o121b2o21bo$157bobo",
-			"121bobo22bo$164b2o117bo3bo14bo3bo$162b2ob2o3b2o8bo105bo3bo12b4o$162b4o",
-			"3b4o8bo104bo2b2o$163b2o4b2ob2o3bo3bo109bo$136b5o30b2o5b4o105b2o$135bo",
-			"4bo$140bo$139bo$177bo$178b2o$179bo$179bo$178bo3$180bo$181bo$177bo3bo$",
-			"161b4o13b4o$160bo3bo$164bo$163bo!"}},
-	{"Infinite Glider Hotel", ".rle",
-		[]string{"#N Infinite glider hotel",
-			"#O David Bell",
-			"#C A pattern in which two pairs of Corderships recede and allow more and",
-			"#C more gliders to bounce back and forth between them. Created on October 9, 1992.",
-			"#C www.conwaylife.com/wiki/index.php?title=Infinite_glider_hotel",
-			"x = 566, y = 572, rule = b3/s23",
-			"13b2o551b$13b2o551b6$13b3o550b2$13bobo550b$12b5o549b$11b2o3b2o548b$11b",
-			"2o3b2o548b4$2bo6bo556b$b2o6b2o555b$3o6b3o554b$b2o6b2o555b$2bo6bo556b",
-			"165$301bo264b2$297bo7bo260b$291b3o2bo8bo260b$291b3o2bo3b2o4bo259b$289b",
-			"o2b2o2bo6bobo260b$289bobo10b2obo260b$289b3o274b$280b2o18bo265b$280b2o",
-			"284b$316bo249b$314b2ob2o247b2$314b2o250b$314bo251b$316bo3bo245b$272b2o",
-			"38bo3bo249b$272b2o292b$306bo259b$305bobo10bo247b$305bobo7bobo248b$304b",
-			"o2bo6bo251b$304bobo8b2o249b$303bo11bobo248b$264b2o37b2o10bobo248b$264b",
-			"2o38bo9bob2o248b$313b2ob2o9bo238b$316b3o247b$323bo7bo234b$306bo15bo8bo",
-			"234b$272b3o30bobo14bo3b2o4bo233b$305bo16bo6bobo234b$270bo34bo22b2obo",
-			"234b$269b2o3bo30bo260b$270bobo53bo22b2o215b$273b3o28bo261b$273bo29b3ob",
-			"2o38bo3bo214b$301b2ob3o39bo219b$273b2o28bo41bo7bo212b$272b2o75bo4bo",
-			"211b$273bo70bo4bobobo212b$272b2o32bo37bo8bo212b$273b2o30bob2o35bob2o4b",
-			"o213b$283bo20b2obob2o33b3ob2obo214b$276bo3bo2bobo2bo19bo36b2ob3o215b$",
-			"276b5ob2o4bo21bob2o4b2o12b2o232b$277bobo4bo3bo25bob2o8b2o4b2o232b$311b",
-			"4obob3o5b2o238b$284b3o28bo250b$285bo280b2$370bo195b$368b2obo194b$324b",
-			"2o41bo198b$318b2o4b2o40bo2bo3bo192b$318b2o45bo9bo190b$240b2o56b3o64b2o",
-			"2b2o4bo190b$239b2o124b2o199b$241bo21b2o31bo70bo5bo192b$262bobo30b2o3bo",
-			"64b3o4bo193b$252b2o7bo13bobo18bobo66b2o4bo3b2o189b$252b2o7bo2bo6b2o2bo",
-			"2bo20b3o14b2o48b4o196b$261bo8bobo5b2o19bo10b2o4b2o39bobo13bo3bo188b$",
-			"262bobo3bo3bo3bo3b2o4b2o22b2o45b3o12bo193b$263b2o2b2ob3o5b2o6b2o11b2o",
-			"57b2o11bo7bo186b$270b2o3bo2bo19b2o75bo4bo185b$275bobo21bo70bo4bobobo",
-			"186b$298b2o56bo13bo8bo186b$299b2o55bobo11bob2o4bo187b$261bo94b3o11b3ob",
-			"2obo188b$261bobo38b2o51bo15b2ob3o189b$238bo22b2o39b2o21bobo27b5o206b$",
-			"236bobo85b2ob2o12bo224b$227bo7bobo86b2obo12bobo223b$226b2o6bo2bo11b2o",
-			"72bo17bo224b$225b2o4b2o2bobo11b2o73bo18bo222b$215b2o7b3o4b2o3bobo15bo",
-			"69bo18b2o221b$215b2o8b2o4b2o5bo14bo87bo2bo221b$226b2o25b3o85b3o222b$",
-			"227bo107bo6bo223b$239bo94b3o229b$234b4o2bo9b4o26b4o84b2o196b$236bob3o",
-			"8bo3bo25bo3bo50b3o29b2o2bo5bo189b$237bo15bo29bo5b3o39b2ob2o30bo2b3o4bo",
-			"189b$234bo14bo2bo26bo2bo6bo43bo32bo4bo4bo189b$237bo52bo76b5o194b$234bo",
-			"134b2o195b2$227bo338b$227b2o337b$226bobo337b$370b2o194b$214b2o27bo126b",
-			"2o194b$213bobo26b2o322b$203b2o7bo6b2o4bo16bobo321b$203b2o7bo2bo2bo2bo",
-			"2bobo26bo312b$212bo6b3obob2o25bobo311b$213bobo6b2ob2o14bo8b2o3bo9b2o",
-			"84bobo212b$214b2o7bob2o14b4o5b2o3bo9b2o83b2ob2o211b$224bobo15b4o4b2o3b",
-			"o94b2obo8b2o202b$225bo16bo2bo6bobo94bo12b2o202b$242b4o7bo72b2o22bo215b",
-			"$241b4o80bobo22bo215b$241bo82b3o239b$324b2o240b$324b2o240b$325bobo238b",
-			"$326bo27b2o210b$354b2o210b2$323b2o3b2o236b$323b2o3b2o236b2$319b3o3b3o",
-			"238b$319bo5b3o238b$203b2o115bo5bo239b$203b2o113bo247b$318b2o246b$317bo",
-			"bo246b3$208bo114b3o240b$208bo114b3o240b$195b2o12bo112bo3bo239b$195b2o",
-			"8bob2o101b2o254b$204b2ob2o102b2o8b2o3b2o238b$205bobo102bo255b5$187b2o",
-			"114bo262b$187b2o114b2o261b$302bobo261b2$290b2o31b2o241b$289bobo31b2o",
-			"241b$188b2o89b2o7bo6b2o4bo264b$187b5o87b2o7bo2bo2bo2bo2bobo263b$182bo",
-			"4bo4bo32bo62bo6b3obob2o263b$182bo4b3o2bo30b2ob2o61bobo6b2ob2o10b2o251b",
-			"$182bo5bo2b2o29b3o65b2o7bob2o10b2o251b$189b2o109bobo263b$222b3o76bo",
-			"264b$216bo6bo342b$215b3o348b$214bo2bo348b$214b2o18bo331b$215bo18bo331b",
-			"$217bo17bo330b$216bobo12bob2o331b$217bo12b2ob2o331b$199b5o27bobo21b2o",
-			"309b$182b3ob2o15bo51b2o309b$181bob2ob3o11b3o363b$180bo4b2obo11bobo55b",
-			"2o306b$179bo8bo13bo56b2o305b$179bobobo4bo70bo306b$178bo4bo75b2o305b$",
-			"179bo7bo11b2o57b2o306b$186bo12b3o45b2o317b$181bo3bo13bobo39b2o4b2o10bo",
-			"306b$189b4o48b2o14b3o306b$182b2o3bo4b2o66bobo303b$186bo4b3o64bo3b2o83b",
-			"o218b$185bo5bo70bo85bo217b$192b2o152b3o217b$183bo4b2o2b2o64b3o305b$",
-			"183bo9bo45b2o325b$185bo3bo2bo40b2o4b2o325b$191bo41b2o331b$187bob2o375b",
-			"$188bo377b2$273bo292b$243bo28b3o291b$231b2o5b3obob4o318b$225b2o4b2o8b",
-			"2obo25bo3bo4bobo284b$225b2o12b2o4b2obo21bo4b2ob5o283b$208b3ob2o36bo19b",
-			"o2bobo2bo3bo283b$207bob2ob3o33b2obob2o20bo290b$206bo4b2obo35b2obo30b2o",
-			"280b$205bo8bo37bo32b2o279b$205bobobo4bo70bo280b$204bo4bo75b2o279b$205b",
-			"o7bo41bo28b2o280b$212bo39b3ob2o308b$207bo3bo38b2ob3o29bo280b$254bo28b",
-			"3o280b$208b2o22bo53bobo277b$253bo30bo3b2o276b$227bob2o22bo34bo277b$",
-			"227bobo6bo16bo312b$226bo4b2o3bo14bobo30b3o279b$227bo8bo15bo313b$227bo",
-			"7bo330b$240b3o323b$231bo9b2ob2o320b$241b2obo9bo38b2o271b$241bobo10b2o",
-			"37b2o271b$241bobo11bo310b$242b2o8bobo311b$244bo6bo2bo311b$241bobo7bobo",
-			"312b$240bo10bobo312b$252bo313b$285b2o279b$242bo3bo38b2o279b$238bo3bo",
-			"323b$244bo321b$243b2o321b2$240b2ob2o321b$242bo323b$277b2o287b$258bo18b",
-			"2o287b$267b3o296b$253bob2o10bobo296b$253bobo6bo2b2o2bo296b$252bo4b2o3b",
-			"o2b3o298b$253bo8bo2b3o298b$253bo7bo304b2$257bo308b144$558bo4bo2b$556b",
-			"2ob4ob2o$552bo5bo4bo2b$551bo14b$551bo14b3$549b2o3b2o10b$550b5o11b$551b",
-			"3o12b$552bo13b8$552b2o12b$552b2o!"}},
+//go:embed files
+var ExamplesFS embed.FS
+
+func ListExamples() []Example {
+	examples := make([]Example, 0, 64)
+
+	files, err := ExamplesFS.ReadDir("files")
+	if err != nil {
+		log.Print("Can't ready embedded files:", err)
+		return examples
+	}
+
+	for _, ent := range files {
+		path := "files/" + ent.Name()
+		loader := golife.FindReader(path)
+		filecontents, fileErr := ExamplesFS.ReadFile(path)
+		if fileErr != nil {
+			log.Print("Error reading embedded file", path, fileErr)
+			continue
+		}
+		game, lifeErr := loader(strings.NewReader(string(filecontents)))
+		if lifeErr != nil {
+			log.Print("Error parsing embedded file", path, lifeErr)
+			continue
+		}
+		var title string = filepath.Base(path)
+		if len(game.Comments) > 0 && strings.HasPrefix(game.Comments[0], "N") {
+			title = game.Comments[0][1:]
+		}
+		
+		examples = append(examples, Example{Title: title, path: path})
+	}
+
+	return examples
 }
 
 func LoadExample(e Example) *golife.Game {
-	loader := golife.FindReader(e.Format)
-	g, err := loader(strings.NewReader(strings.Join(e.FileData, "\n")))
+	loader := golife.FindReader(e.path)
+	contents, fileErr := ExamplesFS.ReadFile(e.path)
+	if fileErr != nil {
+		log.Print("Unable to read golife example file", e.path, fileErr)
+		return nil
+	}
+	g, err := loader(strings.NewReader(string(contents)))
 	if err != nil {
-		log.Print("Unable to load golife.example:", err)
+		log.Print("Unable to load golife example", e.path, err)
 	} else {
-		g.Filename = e.Title // hack, since this isn't really the title of a file
+		g.Filename = e.path
 	}
 
 	return g

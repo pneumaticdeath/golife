@@ -1,0 +1,4 @@
+#N Blinker
+#C Primative oscilator
+  x = 1, y = 3, rule = b3/s23
+o$o$o!

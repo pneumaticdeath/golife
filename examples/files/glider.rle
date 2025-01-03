@@ -1,0 +1,4 @@
+#N Glider
+#C The first known spaceship/glider to traverse the grid
+  x = 3, y = 3, rule = b3/s23
+bo$2bo$3o!

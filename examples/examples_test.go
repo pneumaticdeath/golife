@@ -6,10 +6,10 @@ import (
 )
 
 func TestExampleValidity(t *testing.T) {
-	for index := range examples.Examples{
-		e := examples.Examples[index]
+	ex := examples.ListExamples()
+	for _, e := range ex {
 		if e.Title == "" {
-			t.Error("No title at index", index)
+			t.Error("No title")
 		}
 		g := examples.LoadExample(e)
 		if g == nil {
