@@ -10,8 +10,8 @@ import (
 )
 
 type Example struct {
-	Title    string
-	path     string
+	Title string
+	path  string
 }
 
 //go:embed files
@@ -43,7 +43,7 @@ func ListExamples() []Example {
 		if len(game.Comments) > 0 && strings.HasPrefix(game.Comments[0], "N") {
 			title = game.Comments[0][1:]
 		}
-		
+
 		examples = append(examples, Example{Title: title, path: path})
 	}
 

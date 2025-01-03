@@ -1,8 +1,8 @@
 package examples_test
 
 import (
-        "testing"
-        "github.com/pneumaticdeath/golife/examples"
+	"github.com/pneumaticdeath/golife/examples"
+	"testing"
 )
 
 func TestExampleValidity(t *testing.T) {
@@ -13,7 +13,7 @@ func TestExampleValidity(t *testing.T) {
 		}
 		g := examples.LoadExample(e)
 		if g == nil {
-			t.Error("Example",e.Title,"had nil load")
+			t.Error("Example ", e.Title, " had nil load")
 		}
 	}
 }
