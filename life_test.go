@@ -87,6 +87,25 @@ func TestCellsReader(t *testing.T) {
     }
 }
 
+func TestAddRemoveCell(t *testing.T) {
+    cell := golife.Cell{1, 1}
+    game := golife.NewGame()
+
+    if game.HasCell(cell) {
+        t.Error("Blank game has a cell in it!")
+    }
+
+    game.AddCell(cell)
+    if !game.HasCell(cell) {
+	t.Error("Cell didn't persist after being added")
+    }
+
+    game.RemoveCell(cell)
+    if game.HasCell(cell) {
+	t.Error("Cell persisted after being removed")
+    }
+}
+
 func BenchmarkGameStep(b *testing.B) {
     game := golife.NewGame()
     game.AddCells(testPattern)

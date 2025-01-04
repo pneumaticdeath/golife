@@ -107,6 +107,14 @@ func (game *Game) AddCells(cells []Cell) {
     game.Population.Add(cells)
 }
 
+func (game *Game) RemoveCell(cell Cell) {
+    delete(game.Population, cell)
+}
+
+func (game *Game) HasCell(cell Cell) bool {
+    return game.Population[cell]
+}
+
 func (game *Game) Next() {
     if game.HistorySize != 0 {
         if game.History == nil {
