@@ -1,0 +1,3 @@
+[submodule "life_cli"]
+	path = life_cli
+	url = git@github.com:pneumaticdeath/life_cli.git
