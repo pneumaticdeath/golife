@@ -2,6 +2,7 @@ package examples
 
 import (
 	"embed"
+	"io/fs"
 	"log"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 type Example struct {
 	Title string
+	Category string
 	path  string
 }
 
@@ -20,32 +22,37 @@ var ExamplesFS embed.FS
 func ListExamples() []Example {
 	examples := make([]Example, 0, 64)
 
-	files, err := ExamplesFS.ReadDir("files")
-	if err != nil {
-		log.Print("Can't ready embedded files:", err)
-		return examples
-	}
+	fs.WalkDir(ExamplesFS, "files", func(dir string, file fs.DirEntry, err error) error {
+		if !strings.HasSuffix(file.Name(), ".rle") {
+			return nil
+		}
 
-	for _, ent := range files {
-		path := "files/" + ent.Name()
+		category, ok := strings.CutPrefix(dir, "files/")
+		if !ok {
+			return nil
+		}
+		path := dir
 		loader := golife.FindReader(path)
 		filecontents, fileErr := ExamplesFS.ReadFile(path)
 		if fileErr != nil {
-			log.Print("Error reading embedded file", path, fileErr)
-			continue
+			log.Print("Error reading embedded file ", fileErr)
+			return nil
 		}
 		game, lifeErr := loader(strings.NewReader(string(filecontents)))
 		if lifeErr != nil {
-			log.Print("Error parsing embedded file", path, lifeErr)
-			continue
+			log.Print("Error parsing embedded file ", path, lifeErr)
+			return nil
 		}
 		var title string = filepath.Base(path)
+		//FixMe: The name comment doesn't have to be the first one.
 		if len(game.Comments) > 0 && strings.HasPrefix(game.Comments[0], "N ") {
 			title = game.Comments[0][2:]
 		}
 
-		examples = append(examples, Example{Title: title, path: path})
-	}
+		examples = append(examples, Example{Title: title, Category: category, path: path})
+
+		return nil
+	})
 
 	return examples
 }
