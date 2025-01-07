@@ -27,10 +27,8 @@ func ListExamples() []Example {
 			return nil
 		}
 
-		category, ok := strings.CutPrefix(dir, "files/")
-		if !ok {
-			return nil
-		}
+		fields := strings.Split(dir,"/")
+		category := fields[1]
 		path := dir
 		loader := golife.FindReader(path)
 		filecontents, fileErr := ExamplesFS.ReadFile(path)
