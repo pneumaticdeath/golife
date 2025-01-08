@@ -38,7 +38,7 @@ func ListExamples() []Example {
 		}
 		game, lifeErr := loader(strings.NewReader(string(filecontents)))
 		if lifeErr != nil {
-			log.Print("Error parsing embedded file ", path, lifeErr)
+			log.Print("Error parsing embedded file ", path, " ", lifeErr)
 			return nil
 		}
 		var title string = filepath.Base(path)

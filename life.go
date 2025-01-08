@@ -177,21 +177,6 @@ func UnknownFiletypeReader(reader io.Reader) (*Game, error) {
 	return nil, errors.New("Unsupported file type")
 }
 
-/*
-func LoadRLE(filepath string) (*Game, error) {
-    fileReader, err := os.Open(filepath)
-    if err != nil {
-        return nil, err
-    }
-    game, err := ReadRLE(fileReader)
-    defer fileReader.Close()
-    if game != nil {
-        game.Filename = filepath
-    }
-    return game, err
-}
-*/
-
 func ReadRLE(reader io.Reader) (*Game, error) {
 	g := NewGame()
 
@@ -227,6 +212,7 @@ func ReadRLE(reader io.Reader) (*Game, error) {
 
 	var x, y, max_x Coord
 	var expected_x, expected_y Coord
+	rule := ""
 	done := false
 
 	for line_no := range lines {
@@ -236,10 +222,10 @@ func ReadRLE(reader io.Reader) (*Game, error) {
 		} else {
 			if strings.Contains(line, "=") {
 				f := func(c rune) bool {
-					return !unicode.IsLetter(c) && !unicode.IsNumber(c)
+					return !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '/'
 				}
 				fields := strings.FieldsFunc(line, f)
-				if len(fields) < 4 || fields[0] != "x" || fields[2] != "y" {
+				if len(fields) < 6 || fields[0] != "x" || fields[2] != "y" || fields[4] != "rule" {
 					log.Printf("ERROR: Unable to parse line: %s", line)
 				} else {
 					ex_x, err1 := strconv.Atoi(fields[1])
@@ -250,6 +236,7 @@ func ReadRLE(reader io.Reader) (*Game, error) {
 						expected_x = Coord(ex_x)
 						expected_y = Coord(ex_y)
 					}
+					rule = fields[5]
 				}
 			} else {
 				chars := strings.Split(strings.TrimSpace(line), "")
@@ -289,6 +276,10 @@ func ReadRLE(reader io.Reader) (*Game, error) {
 		if done {
 			break
 		}
+	}
+
+	if strings.ToLower(rule) != "b3/s23" {
+		return nil, errors.New("Unable to handle rule " + rule)
 	}
 
 	if !done {

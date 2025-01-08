@@ -107,6 +107,20 @@ func TestAddRemoveCell(t *testing.T) {
 	}
 }
 
+func TestLoaderForSupportedFiles(t *testing.T) {
+	_, err := golife.Load("test_files/unsupported_rule.rle")
+
+	if err == nil {
+		t.Error("Loaded unsupported file rule without error")
+	}
+
+	_, err2 := golife.Load("examples/files/Simple/glider.rle")
+	
+	if err2 != nil {
+		t.Error(fmt.Sprintf("Error loading known good file glider.rle %s", err2))
+	}
+}
+
 func BenchmarkGameStep(b *testing.B) {
 	game := golife.NewGame()
 	game.AddCells(testPattern)
