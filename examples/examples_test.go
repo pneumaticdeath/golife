@@ -1,6 +1,7 @@
 package examples_test
 
 import (
+	// "fmt"
 	"github.com/pneumaticdeath/golife/examples"
 	"testing"
 )
@@ -18,6 +19,7 @@ func TestExampleValidity(t *testing.T) {
 		} else {
 			parseCount += 1
 		}
+		// fmt.Println("Loaded ", e.Title)
 	}
 	if parseCount == 0 {
 		t.Error("No examples found")
