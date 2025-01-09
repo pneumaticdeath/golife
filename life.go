@@ -95,7 +95,10 @@ func (game *Game) SetHistorySize(size int) {
 		} else {
 			game.History = make([]Population, 0, 10)
 		}
+	} else if size > 0 && len(game.History) > size {
+		game.History = game.History[len(game.History)-size:]
 	}
+
 	game.HistorySize = size
 }
 

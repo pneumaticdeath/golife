@@ -115,7 +115,7 @@ func TestLoaderForSupportedFiles(t *testing.T) {
 	}
 
 	_, err2 := golife.Load("examples/files/Simple/glider.rle")
-	
+
 	if err2 != nil {
 		t.Error(fmt.Sprintf("Error loading known good file glider.rle %s", err2))
 	}
