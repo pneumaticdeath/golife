@@ -29,7 +29,7 @@ func display(g *golife.Game) {
 		for y = min_cell.Y; y <= max_cell.Y; y++ {
 			cell_line := make([]string, width)
 			for x = min_cell.X; x <= max_cell.X; x++ {
-				if g.Population[golife.Cell{x, y}] {
+				if g.HasCell(golife.Cell{x, y}) {
 					cell_line[int(x-min_cell.X)] = "*"
 				} else {
 					cell_line[int(x-min_cell.X)] = " "
@@ -73,7 +73,7 @@ func main() {
 		g.AddCells(cells)
 	}
 
-	for i := 0; i < *generationsPtr && len(g.Population) > 0; i++ {
+	for i := 0; i < *generationsPtr && g.Population.Size() > 0; i++ {
 		if *displayPtr {
 			display(g)
 		}
