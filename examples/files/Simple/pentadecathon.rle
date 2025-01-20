@@ -1,0 +1,4 @@
+#N Pentadecathon
+#C A simple period 15 oscilator
+  x = 10, y = 3, rule = b3/s23
+2bo4bo$2ob4ob2o$2bo4bo!

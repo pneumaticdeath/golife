@@ -1,4 +1,5 @@
-#N Pseudo random glider generator with period 30*10961685 = 328850550
+#N Pseudo random glider generator
+#C Pseudo random glider generator with period 30*10961685 = 328850550
 #C This is based on earlier patterns by Bill Gosper and myself, which
 #C used p46 and p120 logic, respectively.   The pattern produces a
 #C sequence of bits b[n], represented by gliders, satisfying the

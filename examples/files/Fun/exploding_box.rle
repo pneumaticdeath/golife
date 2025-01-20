@@ -1,0 +1,7 @@
+#N Exploding Box
+#O Mitch Patenude
+#C A box structure that implodes and leaves only gliders
+#C radiating outward
+  x = 13, y = 13, rule = b3/s23
+3b7o2$3b7o$obo7bobo$obobo3bobobo$obo2bobo2bobo$obo7bobo$obo2bobo2bobo$obobo3bob
+obo$obo7bobo$3b7o2$3b7o!
