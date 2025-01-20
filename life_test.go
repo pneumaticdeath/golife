@@ -15,12 +15,12 @@ func TestPopulationAdd(t *testing.T) {
 	pop := make(golife.Population)
 	popStep := make(golife.Population)
 
-	if len(pop) != 0 {
+	if pop.Size() != 0 {
 		t.Error("New Population isn't empty")
 	}
 
 	pop.Add(testPattern)
-	if len(pop) != 3 {
+	if pop.Size() != 3 {
 		t.Error("Didn't add population properly")
 	}
 
@@ -31,7 +31,7 @@ func TestPopulationAdd(t *testing.T) {
 }
 
 func cmpPops(pop1, pop2 golife.Population) (bool, string) {
-	if len(pop1) != len(pop2) {
+	if pop1.Size() != pop2.Size() {
 		return false, "different lengths"
 	}
 

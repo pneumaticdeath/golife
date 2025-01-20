@@ -38,6 +38,10 @@ func (pop Population) Add(new_cells []Cell) {
 	}
 }
 
+func (pop Population) Size() int {
+	return len(pop)
+}
+
 func (current Population) Step() Population {
 	nextgen := make(Population)
 	neighbor_count := make(map[Cell]int8)
@@ -78,6 +82,10 @@ func NewGame() *Game {
 	var game Game
 	game.Init()
 	return &game
+}
+
+func (game *Game) Size() int {
+	return game.Population.Size()
 }
 
 func (game *Game) Init() {
