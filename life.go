@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/mitchellh/copystructure"
 )
 
 const (
@@ -88,6 +90,20 @@ func NewGame() *Game {
 
 func (game *Game) Size() int {
 	return game.Population.Size()
+}
+
+func (game *Game) Copy() *Game {
+	copied, copyerr := copystructure.Copy(game)
+	if copyerr != nil {
+		log.Fatal("Unable to copy game")
+		return nil
+	}
+	newgame, casterr := copied.(Game)
+	if casterr {
+		log.Fatal("Unable to cast the copy")
+		return nil
+	}
+	return &newgame
 }
 
 func (game *Game) Init() {

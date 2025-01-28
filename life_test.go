@@ -11,6 +11,16 @@ import (
 var testPattern golife.CellList = golife.CellList{{0, 0}, {1, 0}, {2, 0}}
 var testPatternStep golife.CellList = golife.CellList{{1, -1}, {1, 0}, {1, 1}}
 
+func TestCopy(t *testing.T) {
+	game := golife.NewGame()
+	game.Population.Add(testPattern)
+	copied := game.Copy()
+	game.Next()
+	if match, _ := cmpPops(game.Population, copied.Population); match {
+		t.Error("Copy not isolated from original")
+	}
+}
+
 func TestPopulationAdd(t *testing.T) {
 	pop := make(golife.Population)
 	popStep := make(golife.Population)
