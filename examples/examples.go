@@ -42,9 +42,8 @@ func ListExamples() []Example {
 			return nil
 		}
 		var title string = filepath.Base(path)
-		//FixMe: The name comment doesn't have to be the first one.
-		if len(game.Comments) > 0 && strings.HasPrefix(game.Comments[0], "N ") {
-			title = game.Comments[0][2:]
+		if game.Name != "" {
+			title = game.Name
 		}
 
 		examples = append(examples, Example{Title: title, Category: category, path: path})
