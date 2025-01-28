@@ -12,8 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
-
-	"github.com/mitchellh/copystructure"
 )
 
 const (
@@ -93,16 +91,12 @@ func (game *Game) Size() int {
 }
 
 func (game *Game) Copy() *Game {
-	copied, copyerr := copystructure.Copy(game)
-	if copyerr != nil {
-		log.Fatal("Unable to copy game")
-		return nil
+	newgame := *game
+	newgame.Comments = make([]string, len(game.Comments))
+	for index := range game.Comments {
+		newgame.Comments[index] = game.Comments[index]
 	}
-	newgame, casterr := copied.(Game)
-	if casterr {
-		log.Fatal("Unable to cast the copy")
-		return nil
-	}
+	// I'm explicitly not copying the history, that may need to be revisited later
 	return &newgame
 }
 

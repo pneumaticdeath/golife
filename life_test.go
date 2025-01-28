@@ -15,6 +15,9 @@ func TestCopy(t *testing.T) {
 	game := golife.NewGame()
 	game.Population.Add(testPattern)
 	copied := game.Copy()
+	if match, _ := cmpPops(game.Population, copied.Population); !match {
+		t.Error("Copy not complete")
+	}
 	game.Next()
 	if match, _ := cmpPops(game.Population, copied.Population); match {
 		t.Error("Copy not isolated from original")
