@@ -74,6 +74,8 @@ type Game struct {
 	Population  Population
 	History     []Population
 	HistorySize int
+	Name        string
+	Author      string
 	Comments    []string
 	Generation  int
 }
@@ -226,10 +228,15 @@ func ReadRLE(reader io.Reader) (*Game, error) {
 	rule := ""
 	done := false
 
-	for line_no := range lines {
-		line := lines[line_no]
+	for _, line := range lines {
 		if strings.HasPrefix(line, "#") {
-			g.Comments = append(g.Comments, strings.TrimPrefix(line, "#"))
+			if strings.HasPrefix(line, "#N ") {
+				g.Name = strings.TrimPrefix(line, "#N ")
+			} else if strings.HasPrefix(line, "#O ") {
+				g.Author = strings.TrimPrefix(line, "#O ")
+			} else {
+				g.Comments = append(g.Comments, strings.TrimPrefix(line, "#"))
+			}
 		} else {
 			if strings.Contains(line, "=") {
 				f := func(c rune) bool {
@@ -416,8 +423,19 @@ func (game *Game) WriteRLE(outfile io.Writer) error {
 	}
 
 	outwriter := bufio.NewWriter(outfile)
-	for i := range game.Comments {
-		comment := game.Comments[i]
+	if game.Name != "" {
+		_, err := outwriter.WriteString(fmt.Sprintln("#N ", game.Name))
+		if err != nil {
+			return err
+		}
+	}
+	if game.Author != "" {
+		_, err := outwriter.WriteString(fmt.Sprintln("#O ", game.Author))
+		if err != nil {
+			return err
+		}
+	}
+	for _, comment := range game.Comments {
 		if !strings.HasPrefix(comment, "#") {
 			_, err := outwriter.WriteString("#")
 			if err != nil {
