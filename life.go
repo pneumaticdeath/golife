@@ -92,6 +92,10 @@ func (game *Game) Size() int {
 
 func (game *Game) Copy() *Game {
 	newgame := *game
+	newgame.Population = make(Population)
+	for k, v := range game.Population {
+		newgame.Population[k] = v
+	}
 	newgame.Comments = make([]string, len(game.Comments))
 	for index := range game.Comments {
 		newgame.Comments[index] = game.Comments[index]

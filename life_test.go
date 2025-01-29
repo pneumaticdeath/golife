@@ -18,6 +18,11 @@ func TestCopy(t *testing.T) {
 	if match, _ := cmpPops(game.Population, copied.Population); !match {
 		t.Error("Copy not complete")
 	}
+	copied.AddCell(golife.Cell{5, 5})
+	if match, _ := cmpPops(game.Population, copied.Population); match {
+		t.Error("Copy Population not isolated from original")
+	}
+	copied.RemoveCell(golife.Cell{5, 5})
 	game.Next()
 	if match, _ := cmpPops(game.Population, copied.Population); match {
 		t.Error("Copy not isolated from original")
