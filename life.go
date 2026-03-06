@@ -43,14 +43,18 @@ func (pop Population) Size() int {
 }
 
 func (current Population) Step() Population {
-	nextgen := make(Population)
-	neighbor_count := make(map[Cell]int8)
-	for cell, present := range current {
-		if present {
-			for _, n := range neighbors(cell) {
-				neighbor_count[n] += 1
-			}
-		}
+	nextgen := make(Population, len(current))
+	neighbor_count := make(map[Cell]int8, len(current)*4)
+	for cell := range current {
+		x, y := cell.X, cell.Y
+		neighbor_count[Cell{x - 1, y - 1}]++
+		neighbor_count[Cell{x, y - 1}]++
+		neighbor_count[Cell{x + 1, y - 1}]++
+		neighbor_count[Cell{x - 1, y}]++
+		neighbor_count[Cell{x + 1, y}]++
+		neighbor_count[Cell{x - 1, y + 1}]++
+		neighbor_count[Cell{x, y + 1}]++
+		neighbor_count[Cell{x + 1, y + 1}]++
 	}
 
 	for cell, count := range neighbor_count {
@@ -62,12 +66,6 @@ func (current Population) Step() Population {
 	return nextgen
 }
 
-func neighbors(cell Cell) []Cell {
-	retval := [8]Cell{{cell.X - 1, cell.Y - 1}, {cell.X, cell.Y - 1}, {cell.X + 1, cell.Y - 1},
-		{cell.X - 1, cell.Y}, {cell.X + 1, cell.Y},
-		{cell.X - 1, cell.Y + 1}, {cell.X, cell.Y + 1}, {cell.X + 1, cell.Y + 1}}
-	return retval[:]
-}
 
 type Game struct {
 	Filename    string
